@@ -9,14 +9,6 @@ This tutorial shows how to generate a custom AXI4 Master with burst functionalit
 
 ## Creating a New Vivado Project
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-Firstly, one has to start Vivado and create a new project.
-
-![Create New Project](./images/new_vivado_project01.png "Create New Project")
-=======
-=======
->>>>>>> Stashed changes
 1. Start Vivado.
 2. Choose "Create New Project" in the Vivado welcome menu.
 
@@ -29,10 +21,3 @@ Firstly, one has to start Vivado and create a new project.
 4. Choose a name for your project and a location. The project name in this tutorial is "axi4_master_burst_example"
 
 ![choose project name and location](./images/new_vivado_project02.png "choose project name and location")
-
-
-
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
