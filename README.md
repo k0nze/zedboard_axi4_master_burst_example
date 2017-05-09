@@ -182,7 +182,7 @@ After the burst writes are completed the AXI4-Full master starts burst reads on 
 
 If the comparison was successful the master goes back into `IDLE` and waits for the next high signal on `init_txn_pulse`. To complete the changes in the verilog code do the following:
 
-1. Click on the tab _Package IP - axi4\\_master\\_burst_.
+1. Click on the tab _Package IP - axi4\_master\_burst_.
 
     ![edit ip tab package ip](./images/edit_ip02.png "edit ip tab package ip")
 
@@ -212,6 +212,15 @@ If the comparison was successful the master goes back into `IDLE` and waits for 
     ![edit ip close project](./images/edit_ip07.png "edit ip close project")
 
 
+You can go back to the verilog code by clicking on _Flow Navigator -> Project Manager -> IP Catalog_.
+
+![edit ip ip catalog](./images/edit_ip08.png "edit ip ip catalog")
+
+And navigate to _User Repository -> AXI Peripheral -> axi4\_master\_burst\_v1.0_ and right-click to open the context menu an choose _Edit in IP Packager_.
+
+![edit ip edit in ip packager](./images/edit_ip09.png "edit ip edit in ip packager")
+
 ## Zynq Block Diagram
+
 
 ## AXI4-Full Master Simulation
