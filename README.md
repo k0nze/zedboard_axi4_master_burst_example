@@ -7,7 +7,8 @@ This tutorial shows how to generate a custom AXI4 Master with burst functionalit
 - Vivado 2016.2
 - Zedboard
 
-## Creating a Vivado Project
+## Creating a New Vivado Project
 
 Firstly, one has to start Vivado and create a new project.
+
 ![Create New Project](./images/new_vivado_project01.png "Create New Project")
