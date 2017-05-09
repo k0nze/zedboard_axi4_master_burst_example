@@ -96,3 +96,60 @@ This tutorial shows how to generate a custom AXI4 Master with burst functionalit
 8. Choose _Edit IP_ and click on _Finish_
 
     ![edit ip](./images/create_and_package_ip08.png "edit ip")
+
+
+## Edit AXI4 Master IP
+
+After the successful creation of the new IP a new Vivado project was opened. In this project we can find the Vivado generated Verilog code for the AXI4-Lite slave, AXI4-Full master, and a wrapper which contains those two components.
+
+
+    ![edit ip source tree](./images/edit_ip01.png "edit ip source tree")
+
+
+* `axi4_master_burst_v1_0` contains the wrapper.
+* `axi4_master_burst_v1_0_S00_AXI_inst` contains the Verilog code for the AXI4-Lite slave.
+* `axi4_master_burst_v1_0_M00_AXI_inst` contains the Verilog code for the AXI4-Full master.
+
+The AXI4-Lite slave will be used to start and monitor a burst write/read of the AXI4-Full master from the Zynq PS. In order to do that you have to customize the AXI4-Lite slave a little. 
+
+Double click on `axi4_master_burst_v1_0_S00_AXI_inst` and navigate to the ports definition and add your own ports under `// Users to add ports here`
+
+```verilog 
+// Users to add ports here
+output wire init_txn,
+input wire txn_done,
+input wire txn_error,
+// User ports ends
+```
+
+The output wire `init_txn` will later be connected to the AXI4-Full master to start a burst write/read. The input wires `txn_done` and `txn_error` will also be connected to the master and indicate if a write/read transaction was completed and if errors occured during a write/read transaction.
+
+The output wire `init_txn` will be connected to the `slv_reg0` of the AXI4-Lite slave. Navigate to `// Add user logic here` and add the following:
+
+```verilog
+// Add user logic here
+assign init_txn = slv_reg0[0:0];
+// User logic ends
+```
+
+The input wires `txn_done` and `txn_error` are directly connected to the `slv_reg1` and `slv_reg2` registers of the AXI4-Lite slave. Navigate to `// Address decoding for reading registers` and change the code like this:
+
+```verilog
+// Implement memory mapped register select and read logic generation
+// Slave register read enable is asserted when valid address is available
+// and the slave is ready to accept the read address.
+assign slv_reg_rden = axi_arready & S_AXI_ARVALID & ~axi_rvalid;
+always @(*)
+begin
+      // Address decoding for reading registers
+      case ( axi_araddr[ADDR_LSB+OPT_MEM_ADDR_BITS:ADDR_LSB] )
+        2'h0   : reg_data_out <= slv_reg0;
+        2'h1   : reg_data_out <= {{31{1'b0}},txn_done};
+        2'h2   : reg_data_out <= {{31{1'b0}},txn_error};
+        2'h3   : reg_data_out <= slv_reg3;
+        default : reg_data_out <= 0;
+      endcase
+end
+```
+
+With those changes the Zynq PS is able to start a write/read transaction by setting the LSB of `slv_reg0` and is also able to read from `slv_reg1` and `slv_reg2` to see if the write/read transaction was completed successfully.
