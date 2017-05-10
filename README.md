@@ -363,8 +363,156 @@ To bring the custom AXI4 IP with the block diagram to the Zynq PL you have to sy
 
 ## Software for the Zynq PS
 
+To program the Zedboard and talk to it via UART you have to connect it to the power supply and connect two USB cables from your computer to the following USB ports on the Zedboard.
+
+![zedboard connection](./images/zedboard01.jpg "zedboard connection")
+
+Make sure your Zedboard is turned on. If the green _POWER_ led is on the Zedboard is turned on.
+
+![zedboard led](./images/zedboard02.jpg "zedboard led")
+
+The C program which will be transferred to the Zynq PS will initiate an AXI4 read/write burst transaction over the AXI4-Lite slave interface of your custom AXI4 IP and afterwards it will verify the result.
+
+1. You have to export the hardware configuration to the Xilinx SDK. Go to _Menu -> File -> Export -> Export Hardware ..._.
+
+    ![menu export hardware](./images/software01.png "menu export hardware")
 
 
+2. Check _Include bitstream_ and click _OK_.
+
+    ![export hardware](./images/software02.png "export hardware")
+
+
+3. To launch the Xilinx SDK go to _Menu -> File -> Launch SDK_
+
+    ![lauch sdk](./images/software03.png "lauch sdk")
+
+
+4. When the Xilinx SDK is ready create a new project by going to _Menu -> File -> New -> Application Project_.
+
+    ![new application project](./images/software04.png "new application project")
+
+
+5. Choose a _Project name_ and leave all other parameters at their default value and click on _Next >_. The _Project name_ in this tutorial is _axi4\_master\_burst\_test_. 
+
+    ![project name](./images/software05.png "project name")
+
+
+6. Choose _Hello World_ under _Available Templates_ and click on finish. This creates a simple Hello World program for the Zynq PS.
+
+    ![hello world](./images/software06.png "hello world")
+
+
+7. After the project was successfully created open `helloworld.c` under _Project Explorer -> axi4\_master\_burst\_test_ -> src -> helloworld.c_ 
+
+    ![helloworld.c](./images/software07.png "helloworld.c")
+
+
+8. Replace the Hello World C code with:
+
+```c
+#include "platform.h"
+#include "xil_printf.h"
+#include "xbasic_types.h"
+#include "xparameters.h"
+
+int main() {
+
+    init_platform();
+
+    xil_printf("== burst test== \n\r");
+
+    // pointer to address the AXI4-Lite slave
+    volatile Xuint32 *slaveaddr_p = (Xuint32 *) XPAR_AXI4_MASTER_BURST_0_S00_AXI_BASEADDR;
+
+    // pointer to memory address 0x10000000
+    volatile Xuint32 *data_p = (Xuint32 *) 0x10000000;
+
+    // check status
+    xil_printf("INIT_TXN\t0x%08x\n\r", *(slaveaddr_p+0));
+    xil_printf("TXN_DONE\t0x%08x\n\r", *(slaveaddr_p+1));
+    xil_printf("ERROR\t\t0x%08x\n\r", *(slaveaddr_p+2));
+    xil_printf("\n\r");
+
+    // start AXI4 write/read burst transaction
+    *(slaveaddr_p+0) = 0x00000001;
+    *(slaveaddr_p+0) = 0x00000000;
+
+    // check status
+    xil_printf("INIT_TXN\t0x%08x\n\r", *(slaveaddr_p+0));
+    xil_printf("TXN_DONE\t0x%08x\n\r", *(slaveaddr_p+1));
+    xil_printf("ERROR\t\t0x%08x\n\r", *(slaveaddr_p+2));
+    xil_printf("\n\r");
+
+    // print memory content
+    int i;
+    for(i = 0; i < 16; i++) {
+        xil_printf("DATA+%d\t\t0x%08x\n\r", i, *(data_p+i));
+    }
+
+    cleanup_platform();
+    return 0;
+}
+```
+
+
+9. Program the Zynq PL with the previously generated bitstream by going to _Menu -> Xilinx Tools -> Program FPGA_.
+
+    ![menu program fpga](./images/software08.png "menu program fpga")
+
+
+10. Click on _Program_.
+
+    ![program fpga](./images/software09.png "program fpga")
+
+
+11. The Zynq PS will write the content of all `xil_printf("...");` statments to the UART.
+    
+    On Linux you can connect to the UART of the Zedboard with the following `picocom` command:
+    `picocom /dev/ttyACM0 -b 115200 -d 8 -y n -p 1`
+
+12. After you programed the Zynq PL you can and connected to the UART you can run the Program on the Zynq PS by clicking on the green button with the white triangle.
+
+    ![run](./images/software10.png "run")
+
+
+13. Choose _Lauch on Hardware (System Debugger)_ and click on _OK_.
+
+    ![run on hardware](./images/software11.png "run on hardware")
+
+
+14. You should see the following output in `picocom`:
+
+```
+== burst test== 
+INIT_TXN	0x00000000
+TXN_DONE	0x00000000
+ERROR		0x00000000
+
+INIT_TXN	0x00000000
+TXN_DONE	0x00000001
+ERROR		0x00000000
+
+DATA+0		0x00000001
+DATA+1		0x00000002
+DATA+2		0x00000003
+DATA+3		0x00000004
+DATA+4		0x00000005
+DATA+5		0x00000006
+DATA+6		0x00000007
+DATA+7		0x00000008
+DATA+8		0x00000009
+DATA+9		0x0000000A
+DATA+10		0x0000000B
+DATA+11		0x0000000C
+DATA+12		0x0000000D
+DATA+13		0x0000000E
+DATA+14		0x0000000F
+DATA+15		0x00000010
+```
+
+You can leave `picocom` with [CTRL]+[A] [CTRL]+[Q].
+    
 ## AXI4 IP Simulation
 
 If you would like to simulate your custom IP before synthesizing it you can either use 
