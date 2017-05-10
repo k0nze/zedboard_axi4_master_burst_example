@@ -73,7 +73,7 @@ This tutorial shows how to generate a custom AXI4 Master with burst functionalit
     ![choose create a new axi4 peripheral](./images/create_and_package_ip03.png "choose create a new axi4 peripheral")
 
 
-4. Choose a name, description and location for the new AXI4 peripheral. The name in this tutorial is `axi4_master_burst` and the location is [...]/ip_repo.
+4. Choose a name, description and location for the new AXI4 peripheral. The name in this tutorial is `axi4_master_burst` and the location is `[...]/ip_repo`.
 
     ![choose name and description](./images/create_and_package_ip04.png "choose name and description")
 
@@ -166,8 +166,25 @@ axi4_master_burst_v1_0_S00_AXI # (
     .txn_error(m00_axi_error),
 
 ```
+Currently the wire `m00_*` are output or input ports of the top module. Those have to be removed from the interface and added as wire in the top module. To do that navigate in `axi4_master_burst_v1_0` to `// Ports of Axi Master Bus Interface M00_AXI` and remove the following lines:
 
-The `m00_*` wires are comming from the AXI4-Full master. When you look at the verilog code of the AXI4-Full master you will see a lot of finite state machines which handle the AXI4 transactions. One finite state machine is responsible for the overall functionality of the AXI4-Full master. You can find this state machine when you navigate to `//implement master command interface state machine`. This state machine consists of four states:
+```verilog
+input wire  m00_axi_init_axi_txn,
+output wire  m00_axi_txn_done,
+output wire  m00_axi_error,
+```
+
+Under the interface definition of the top module `axi4_master_burst_v1_0` add the following lines:
+
+```verilog
+wire  m00_axi_init_axi_txn;
+wire  m00_axi_txn_done;
+wire  m00_axi_error;
+```
+
+Those `m00_*` wires are connecting the the AXI4-Full master and the AXI4-Lite slave in the top module. 
+
+When you look at the verilog code of the AXI4-Full master in `axi4_master_burst_v1_0_M00_AXI_inst` you will see a lot of finite state machines which handle the AXI4 transactions. One of those finite state machine is responsible for the overall functionality of the AXI4-Full master. You can find this state machine when you navigate to `//implement master command interface state machine`. This state machine consists of four states:
 
 * `IDLE`
 * `INIT_WRITE`
@@ -222,5 +239,100 @@ And navigate to _User Repository -> AXI Peripheral -> axi4\_master\_burst\_v1.0_
 
 ## Zynq Block Diagram
 
+That your custom AXI4 IP can be implemented on the Zynq PL and connected to the Zynq PS you have to create a block diagram in Vivado. The following steps will show you how to do that:
+
+1. Click on _Flow Navigator -> IP Integrator -> Create Block Diagram_
+
+    ![create block diagram](./images/block_diagram01.png "create block diagram")
+
+
+2. Choose a name, directory, and specify a source set for the block diagram. In this tutorial everything stays at the default.
+
+    ![block diagram choose name](./images/block_diagram02.png "block diagram choose name")
+
+
+3. Right-click on the white background of the _Diagram_ tab and choose _Add IP_.
+
+    ![block diagram add ip](./images/block_diagram03.png "block diagram add ip")
+
+
+4. From the list of IPs choose _ZYNQ7 Processing System_ (this is the Zynq PS) and double-click on it. 
+
+    ![block diagram zynq ps](./images/block_diagram04.png "block diagram zynq ps")
+
+
+5. You can now see the Zynq PS in the block diagram. Now click on _Run Block Automation_ to connect the Zynq PS with the memory.
+
+    ![block diagram run block automation](./images/block_diagram05.png "block diagram run block automation")
+
+
+6. Leave everything at the default values and click on _OK_.
+
+    ![block diagram run block automation ok](./images/block_diagram06.png "block diagram run block automation ok")
+
+
+7. To connect the your custom AXI4 IP to the Zynq PS the Zynq PS needs an AXI4-Full slave high performance port. To enable this port double-click on the Zynq PS in the block diagram.
+
+    ![block diagram zynq ps](./images/block_diagram07.png "block diagram zynq ps")
+
+
+8. In the _Re-customize IP_ window go to _Page Navigator -> PS-PL Configuration_.
+
+    ![block diagram ps-pl](./images/block_diagram08.png "block diagram ps-pl")
+
+
+9. Go to _PS-PL Configuration -> HP Slave AXI Interface_ and check _S AXI HP0 interface_ and click on _OK_.
+
+    ![block diagram s axi hp0](./images/block_diagram09.png "block diagram s axi hp0")
+
+
+10. In the next step add your custom AXI4 IP by right-clicking on the white background and choosing _Add IP_. Choose _axi4\_master\_burst\_v1.0_ from the list of IPs and double-click on it.
+
+    ![block diagram add custom axi4 ip](./images/block_diagram10.png "block diagram add custom axi4 ip")
+
+
+11. To connect the custom AXI4 IP on the Zynq PL to the Zynq PS click on _Run Connection Automation_.
+
+    ![block diagram run connection automation](./images/block_diagram11.png "block diagram run connection automation")
+
+
+12. In the _Run Connection Automation_ window click on _S00\_AXI_ and choose _/processing\_system7\_0/FCLK\_CLK0_ for _Clock Connection (...)_ and do the same with _S\_AXI\_HP0_.
+
+    ![block diagram clock connection](./images/block_diagram12.png "block diagram clock connection")
+
+
+13. Check all checkboxes on the left-hand side of the _Run Connection Automation_ window to connect those ports automatically and click on _OK_.
+
+    ![block diagram checkboxes](./images/block_diagram13.png "block diagram checkboxes")
+
+
+14. After the auto connection is finished the block diagram should look like this:
+
+    ![block diagram overview](./images/block_diagram14.png "block diagram overview")
+
+
+15. Click on the _Address Editor_ tab and unfold the _axi4\_master\_burst\_0_ tree to see the address range of the _S_AXI_HP0_ port which is connected to the memory. On the Zedboard the address range goes from `0x00000000` to `0x1FFFFFFF`.
+
+    ![block diagram adress editor](./images/block_diagram15.png "block diagram address editor")
+
+
+16. In the _Diagram_ tab double-click on the _axi4\_master\_burst\_0_ to open the _Re-customize IP_ window. Set the _C M 00 AXI TARGET SLAVE BASE ADDR_ to ` 0x10000000` (The default value `0x40000000` is not within the range of the memory)
+
+    ![block diagram recustomize ip](./images/block_diagram16.png "block diagram recustomize ip")
+
+
+17. In the _Sources_ panel navigate to _Design Sources -> design\_1_
+
+    ![block diagram sources](./images/block_diagram17.png "block diagram sources")
+
+
+18. Right-click on _design\_1_ and choose _Create HDL Wrapper_. This generates HDL code for the block diagram which is necessary for the synthesis.
+
+    ![block diagram hdl wrapper](./images/block_diagram18.png "block diagram hdl wrapper")
+
+19. Choose _Let Vivado manage wrapper and auto-update_ and click _OK_. This will always update your HDL wrapper when the block diagram was changed.
+
+    ![block diagram hdl wrapper dialog](./images/block_diagram19.png "block diagram hdl wrapper dialog")
 
 ## AXI4-Full Master Simulation
+
