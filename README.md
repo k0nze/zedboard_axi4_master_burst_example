@@ -100,11 +100,11 @@ This tutorial shows how to generate a custom AXI4 Master with burst functionalit
 
 ## Edit AXI4 IP
 
-After the successful creation of the new IP a new Vivado project was opened. In this project we can find the Vivado generated Verilog code for the AXI4-Lite slave, AXI4-Full master, and a wrapper which contains those two components.
+After the successful creation of the new IP a new Vivado project was opened. In this project you can find the Vivado generated Verilog code for the AXI4-Lite slave, AXI4-Full master, and a top module (wrapper) which contains those two components.
 
 ![edit ip source tree](./images/edit_ip01.png "edit ip source tree")
 
-* `axi4_master_burst_v1_0` contains the wrapper.
+* `axi4_master_burst_v1_0` contains the top module.
 * `axi4_master_burst_v1_0_S00_AXI_inst` contains the Verilog code for the AXI4-Lite slave.
 * `axi4_master_burst_v1_0_M00_AXI_inst` contains the Verilog code for the AXI4-Full master.
 
@@ -152,7 +152,7 @@ end
 
 With those changes the Zynq PS is able to start a write/read transaction by setting the LSB of `slv_reg0` to 1 and is also able to read from the LSB of `slv_reg1` and `slv_reg2` to see if the write/read transaction was completed successfully.
 
-The newly added ports of the AXI4-Lite slave also have to be added to the wrapper `axi4_master_burst_v1_0`. Double click on `axi4_master_burst_v1_0` and navigate to `// Instantiation of Axi Bus Interface S00_AXI` and add the ports to the port map:
+The newly added ports of the AXI4-Lite slave also have to be added to the module instantiation in the top module `axi4_master_burst_v1_0`. Double click on `axi4_master_burst_v1_0` and navigate to `// Instantiation of Axi Bus Interface S00_AXI` and add the ports to the port map:
 
 ```verilog
 // Instantiation of Axi Bus Interface S00_AXI
@@ -166,7 +166,7 @@ axi4_master_burst_v1_0_S00_AXI # (
     .txn_error(m00_axi_error),
 
 ```
-Currently the wire `m00_*` are output or input ports of the top module. Those have to be removed from the interface and added as wire in the top module. To do that navigate in `axi4_master_burst_v1_0` to `// Ports of Axi Master Bus Interface M00_AXI` and remove the following lines:
+Currently the wire `m00_*` are output or input ports of the top module. Those have to be removed from the interface and added as wire in the top module. To do that navigate in `axi4_master_burst_v1_0` to `// Ports of Axi Master Bus Interface M00_AXI` and *remove* the following lines:
 
 ```verilog
 input wire  m00_axi_init_axi_txn,
@@ -330,9 +330,42 @@ That your custom AXI4 IP can be implemented on the Zynq PL and connected to the 
 
     ![block diagram hdl wrapper](./images/block_diagram18.png "block diagram hdl wrapper")
 
+
 19. Choose _Let Vivado manage wrapper and auto-update_ and click _OK_. This will always update your HDL wrapper when the block diagram was changed.
 
     ![block diagram hdl wrapper dialog](./images/block_diagram19.png "block diagram hdl wrapper dialog")
 
-## AXI4-Full Master Simulation
+
+20. After the HDL wrapper for block diagram was generated Vivado will ask if output products should be created. Those output products are necessary for the synthesis and the implementation of your custom AXI4 IP and the block diagram for the Zynq PL. Click on _Generate_ to generate the output products.
+
+    ![block diagram generate output products](./images/block_diagram20.png "block diagram generate output products")
+
+
+## Synthesis and Implementation
+
+To bring the custom AXI4 IP with the block diagram to the Zynq PL you have to synthesize and implement it.
+
+1. Start the synthesis by click on _Run Synthesis_ in _Flow Navigator -> Synthesis_.
+
+    ![run synthesis](./images/synthesis_implementation01.png "run synthesis")
+
+2. After the synthesis is finished choose _Run implementation_ and click on _OK_ to run the implementation.
+
+    ![run implementation](./images/synthesis_implementation02.png "run implementation")
+
+3. When the implementation is finished choose _Generate Bitstream_ and click on _OK_ to generate the bitstream which contains the configuration data for the Zynq PL. 
+
+    ![generate bitstream](./images/synthesis_implementation03.png "generate bitstream")
+
+4. Lastly, when the bitstream generation is finished you can look at the reports to see if all contraints are fulfilled. Choose _View Reports_ and click _OK_. (However, this is not necessary here since the design is very simple)
+
+    ![view reports](./images/synthesis_implementation04.png "view reports")
+
+## Software for the Zynq PS
+
+
+
+## AXI4 IP Simulation
+
+If you would like to simulate your custom IP before synthesizing it you can either use 
 
