@@ -1,3 +1,7 @@
+<!--
+Author: Konstantin Lübeck (University of Tübingen, Chair for Embedded Systems)
+-->
+
 # Creating a Custom AXI4 Master in Vivado (Zedboard)
 
 This tutorial shows you how to generate a custom AXI4 IP with burst functionality in Vivado and how to connect it to the HP Port of the Zynq PS on the Zedboard and simulate it with Vivado `xsim`.
