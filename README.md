@@ -469,7 +469,9 @@ int main() {
 11. The Zynq PS will write the content of all `xil_printf("...");` statments to the UART.
     
     On Linux you can connect to the UART of the Zedboard with the following `picocom` command:
-    `picocom /dev/ttyACM0 -b 115200 -d 8 -y n -p 1`
+```bash
+picocom /dev/ttyACM0 -b 115200 -d 8 -y n -p 1
+```
 
 12. After you programed the Zynq PL you can and connected to the UART you can run the Program on the Zynq PS by clicking on the green button with the white triangle.
 
@@ -515,5 +517,31 @@ You can leave `picocom` with [CTRL]+[A] [CTRL]+[Q].
     
 ## AXI4 IP Simulation
 
-If you would like to simulate your custom IP before synthesizing it you can either use 
+If you would like to simulate your custom IP before synthesizing it you can either use the bus functional model for the AXI4-Bus provided by Xilinx if you have the licences or you can write you own testbench and simulate with Vivado `xsim`. This tutorial provides a simple testbench for your previously generated custom AXI4 IP.
 
+1. Go to the location of the Verilog files of you custom AXI4 IP. You find those in `[...]/ip_repo/ip_repo/axi4_master_burst_1.0/hdl`. 
+
+2. Copy the testbench file from this tutorial [`hdl/axi4_master_burst_v1_0_tb.sv](./hdl/axi4_master_burst_v1_0_tb.sv) into the HDL directory `[...]/ip_repo/ip_repo/axi4_master_burst_1.0/hdl`. The test bench initiates a burst write/read transaction by writing to `slv_reg0` and simulates a memory module for the burst write/read transactions.
+
+3. Navigate with the command line to the HDL directory `[...]/ip_repo/ip_repo/axi4_master_burst_1.0/hdl` and execute the following commands:
+
+```bash
+xvlog axi4_master_burst_v1_0_M00_AXI.v
+xvlog axi4_master_burst_v1_0_S00_AXI.v
+xvlog axi4_master_burst_v1_0.v
+xvlog -sv axi4_master_burst_v1_0_tb.sv
+xelab -debug typical axi4_master_burst_v1_0_tb -s tb
+xsim --gui tb
+```
+
+This opens the Vivado `xsim` simulator.
+
+    ![xsim start](./images/xsim01.png "xsim start")
+
+
+4. Select all singals in the _Objects_ section and right-click on them and choose _Add To Wave Window_.
+
+    ![xsim add signals](./images/xsim01.png "xsim add signals")
+
+
+5. Go into the _Tcl Console_ and type _run 40000ns_ and press [Enter] to start the simulation. In the _Wave Window_ you will see all the signals of your custom AXI4 IP and their change over time. In the _Tcl Console_ is a log of the testbench which tells you about all burst write/read transactions and all the slave write/read transactions. In the end the testbench prints the content of the memory.
