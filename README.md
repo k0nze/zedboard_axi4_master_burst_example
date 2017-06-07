@@ -1,6 +1,10 @@
+<!--
+Author: Konstantin Lübeck (University of Tübingen, Chair for Embedded Systems)
+-->
+
 # Creating a Custom AXI4 Master in Vivado (Zedboard)
 
-This tutorial shows how to generate a custom AXI4 Master with burst functionality in Vivado and how to connect it to the HP Port of the Zynq PS on the Zedboard. 
+This tutorial shows you how to generate a custom AXI4 IP with burst functionality in Vivado and how to connect it to the HP Port of the Zynq PS on the Zedboard and simulate it with Vivado `xsim`.
 
 ## Requirements
 
@@ -87,18 +91,18 @@ This tutorial shows how to generate a custom AXI4 Master with burst functionalit
     ![click on green plus](./images/create_and_package_ip06.png "click on green plus")
 
 
-7. The added interface should be an AXI4-Full Master interface.
+7. The added interface should be an AXI4-Full master interface.
 
 
     ![axi4-full interface](./images/create_and_package_ip07.png "axi4-full interface")
 
 
-8. Choose _Edit IP_ and click on _Finish_
+8. Choose _Edit IP_ and click on _Finish_.
 
     ![edit ip](./images/create_and_package_ip08.png "edit ip")
 
 
-## Edit AXI4 IP
+## Edit Custom AXI4 IP
 
 After the successful creation of the new IP a new Vivado project was opened. In this project you can find the Vivado generated Verilog code for the AXI4-Lite slave, AXI4-Full master, and a top module (wrapper) which contains those two components.
 
@@ -110,7 +114,7 @@ After the successful creation of the new IP a new Vivado project was opened. In 
 
 The AXI4-Lite slave will be used to start and monitor a burst write/read of the AXI4-Full master from the Zynq PS. In order to do that you have to customize the AXI4-Lite slave a little. 
 
-Double click on `axi4_master_burst_v1_0_S00_AXI_inst` and navigate to the ports definition and add your own ports under `// Users to add ports here`
+Double-click on `axi4_master_burst_v1_0_S00_AXI_inst` and navigate to the ports definition and add your own ports under `// Users to add ports here`.
 
 ```verilog 
 // Users to add ports here
@@ -150,9 +154,9 @@ begin
 end
 ```
 
-With those changes the Zynq PS is able to start a write/read transaction by setting the LSB of `slv_reg0` to 1 and is also able to read from the LSB of `slv_reg1` and `slv_reg2` to see if the write/read transaction was completed successfully.
+With those changes the Zynq PS is able to start a write/read transaction by setting the LSB of `slv_reg0` to `1` and is also able to read from the LSB of `slv_reg1` and `slv_reg2` to see if the write/read transaction was completed successfully.
 
-The newly added ports of the AXI4-Lite slave also have to be added to the module instantiation in the top module `axi4_master_burst_v1_0`. Double click on `axi4_master_burst_v1_0` and navigate to `// Instantiation of Axi Bus Interface S00_AXI` and add the ports to the port map:
+The newly added ports of the AXI4-Lite slave also have to be added to the module instantiation in the top module `axi4_master_burst_v1_0`. Double click on `axi4_master_burst_v1_0` and navigate to `// Instantiation of Axi Bus Interface S00_AXI` and add the new ports to the port map:
 
 ```verilog
 // Instantiation of Axi Bus Interface S00_AXI
@@ -166,20 +170,20 @@ axi4_master_burst_v1_0_S00_AXI # (
     .txn_error(m00_axi_error),
 
 ```
-Currently the wire `m00_*` are output or input ports of the top module. Those have to be removed from the interface and added as wire in the top module. To do that navigate in `axi4_master_burst_v1_0` to `// Ports of Axi Master Bus Interface M00_AXI` and *remove* the following lines:
+Currently the wires `m00_*` are output or input ports of the top module. Those have to be removed from the interface and added as wire in the top module. To do that navigate in `axi4_master_burst_v1_0` to `// Ports of Axi Master Bus Interface M00_AXI` and **remove** the following lines:
 
 ```verilog
-input wire  m00_axi_init_axi_txn,
-output wire  m00_axi_txn_done,
-output wire  m00_axi_error,
+input wire m00_axi_init_axi_txn,
+output wire m00_axi_txn_done,
+output wire m00_axi_error,
 ```
 
 Under the interface definition of the top module `axi4_master_burst_v1_0` add the following lines:
 
 ```verilog
-wire  m00_axi_init_axi_txn;
-wire  m00_axi_txn_done;
-wire  m00_axi_error;
+wire m00_axi_init_axi_txn;
+wire m00_axi_txn_done;
+wire m00_axi_error;
 ```
 
 Those `m00_*` wires are connecting the the AXI4-Full master and the AXI4-Lite slave in the top module. 
@@ -219,7 +223,7 @@ If the comparison was successful the master goes back into `IDLE` and waits for 
     ![edit ip review and package](./images/edit_ip05.png "edit ip review and package")
 
 
-5. To finish the work on this custom AXI4 IP click on _Re-Package IP_
+5. To finish the work on your custom AXI4 IP click on _Re-Package IP_.
 
     ![edit ip re-package ip](./images/edit_ip06.png "edit ip re-package ip")
 
@@ -229,7 +233,7 @@ If the comparison was successful the master goes back into `IDLE` and waits for 
     ![edit ip close project](./images/edit_ip07.png "edit ip close project")
 
 
-You can go back to the verilog code by clicking on _Flow Navigator -> Project Manager -> IP Catalog_.
+You can go back to the Verilog code by clicking on _Flow Navigator -> Project Manager -> IP Catalog_.
 
 ![edit ip ip catalog](./images/edit_ip08.png "edit ip ip catalog")
 
@@ -241,7 +245,7 @@ And navigate to _User Repository -> AXI Peripheral -> axi4\_master\_burst\_v1.0_
 
 That your custom AXI4 IP can be implemented on the Zynq PL and connected to the Zynq PS you have to create a block diagram in Vivado. The following steps will show you how to do that:
 
-1. Click on _Flow Navigator -> IP Integrator -> Create Block Diagram_
+1. Click on _Flow Navigator -> IP Integrator -> Create Block Diagram_.
 
     ![create block diagram](./images/block_diagram01.png "create block diagram")
 
@@ -261,7 +265,7 @@ That your custom AXI4 IP can be implemented on the Zynq PL and connected to the 
     ![block diagram zynq ps](./images/block_diagram04.png "block diagram zynq ps")
 
 
-5. You can now see the Zynq PS in the block diagram. Now click on _Run Block Automation_ to connect the Zynq PS with the memory.
+5. You can now see the Zynq PS in the block diagram. Click on _Run Block Automation_ to connect the Zynq PS with the memory.
 
     ![block diagram run block automation](./images/block_diagram05.png "block diagram run block automation")
 
@@ -316,12 +320,12 @@ That your custom AXI4 IP can be implemented on the Zynq PL and connected to the 
     ![block diagram adress editor](./images/block_diagram15.png "block diagram address editor")
 
 
-16. In the _Diagram_ tab double-click on the _axi4\_master\_burst\_0_ to open the _Re-customize IP_ window. Set the _C M 00 AXI TARGET SLAVE BASE ADDR_ to ` 0x10000000` (The default value `0x40000000` is not within the range of the memory)
+16. In the _Diagram_ tab double-click on the _axi4\_master\_burst\_0_ to open the _Re-customize IP_ window. Set the _C M 00 AXI TARGET SLAVE BASE ADDR_ to ` 0x10000000` (The default value `0x40000000` is not within the range of the memory).
 
     ![block diagram recustomize ip](./images/block_diagram16.png "block diagram recustomize ip")
 
 
-17. In the _Sources_ panel navigate to _Design Sources -> design\_1_
+17. In the _Sources_ panel navigate to _Design Sources -> design\_1_.
 
     ![block diagram sources](./images/block_diagram17.png "block diagram sources")
 
@@ -357,7 +361,7 @@ To bring the custom AXI4 IP with the block diagram to the Zynq PL you have to sy
 
     ![generate bitstream](./images/synthesis_implementation03.png "generate bitstream")
 
-4. Lastly, when the bitstream generation is finished you can look at the reports to see if all contraints are fulfilled. Choose _View Reports_ and click _OK_. (However, this is not necessary here since the design is very simple)
+4. Lastly, when the bitstream generation is finished you can look at the reports to see if all contraints are fulfilled. Choose _View Reports_ and click _OK_. (However, this is not necessary here since the design is very simple).
 
     ![view reports](./images/synthesis_implementation04.png "view reports")
 
@@ -383,7 +387,7 @@ The C program which will be transferred to the Zynq PS will initiate an AXI4 rea
     ![export hardware](./images/software02.png "export hardware")
 
 
-3. To launch the Xilinx SDK go to _Menu -> File -> Launch SDK_
+3. To launch the Xilinx SDK go to _Menu -> File -> Launch SDK_.
 
     ![lauch sdk](./images/software03.png "lauch sdk")
 
@@ -403,7 +407,7 @@ The C program which will be transferred to the Zynq PS will initiate an AXI4 rea
     ![hello world](./images/software06.png "hello world")
 
 
-7. After the project was successfully created open `helloworld.c` under _Project Explorer -> axi4\_master\_burst\_test_ -> src -> helloworld.c_ 
+7. After the project was successfully created open `helloworld.c` under _Project Explorer -> axi4\_master\_burst\_test -> src -> helloworld.c_ .
 
     ![helloworld.c](./images/software07.png "helloworld.c")
 
@@ -473,7 +477,7 @@ The C program which will be transferred to the Zynq PS will initiate an AXI4 rea
 picocom /dev/ttyACM0 -b 115200 -d 8 -y n -p 1
 ```
 
-12. After you programed the Zynq PL you can and connected to the UART you can run the Program on the Zynq PS by clicking on the green button with the white triangle.
+12. After you programed the Zynq PL you and connected it to the UART you can run the Program on the Zynq PS by clicking on the green button with the white triangle.
 
     ![run](./images/software10.png "run")
 
@@ -521,27 +525,26 @@ If you would like to simulate your custom IP before synthesizing it you can eith
 
 1. Go to the location of the Verilog files of you custom AXI4 IP. You find those in `[...]/ip_repo/ip_repo/axi4_master_burst_1.0/hdl`. 
 
-2. Copy the testbench file from this tutorial [`hdl/axi4_master_burst_v1_0_tb.sv](./hdl/axi4_master_burst_v1_0_tb.sv) into the HDL directory `[...]/ip_repo/ip_repo/axi4_master_burst_1.0/hdl`. The test bench initiates a burst write/read transaction by writing to `slv_reg0` and simulates a memory module for the burst write/read transactions.
+2. Copy the testbench file from this tutorial [`hdl/axi4_master_burst_v1_0_tb.sv`](./hdl/axi4_master_burst_v1_0_tb.sv) into the HDL directory `[...]/ip_repo/ip_repo/axi4_master_burst_1.0/hdl`. The test bench initiates a burst write/read transaction by writing to `slv_reg0` and simulates a memory module for the burst write/read transactions.
 
-3. Navigate with the command line to the HDL directory `[...]/ip_repo/ip_repo/axi4_master_burst_1.0/hdl` and execute the following commands:
+3. Navigate with the command line to the HDL directory `[...]/ip_repo/ip_repo/axi4_master_burst_1.0/hdl` and execute the following commands: 
+    ```bash
+    xvlog axi4_master_burst_v1_0_M00_AXI.v
+    xvlog axi4_master_burst_v1_0_S00_AXI.v
+    xvlog axi4_master_burst_v1_0.v
+    xvlog -sv axi4_master_burst_v1_0_tb.sv
+    xelab -debug typical axi4_master_burst_v1_0_tb -s tb
+    xsim --gui tb
+    ```
 
-```bash
-xvlog axi4_master_burst_v1_0_M00_AXI.v
-xvlog axi4_master_burst_v1_0_S00_AXI.v
-xvlog axi4_master_burst_v1_0.v
-xvlog -sv axi4_master_burst_v1_0_tb.sv
-xelab -debug typical axi4_master_burst_v1_0_tb -s tb
-xsim --gui tb
-```
-
-This opens the Vivado `xsim` simulator.
+    This opens the Vivado `xsim` simulator.
 
     ![xsim start](./images/xsim01.png "xsim start")
 
 
-4. Select all singals in the _Objects_ section and right-click on them and choose _Add To Wave Window_.
+4. Select all signals in the _Objects_ section and right-click on them and choose _Add To Wave Window_.
 
     ![xsim add signals](./images/xsim01.png "xsim add signals")
 
 
-5. Go into the _Tcl Console_ and type _run 40000ns_ and press [Enter] to start the simulation. In the _Wave Window_ you will see all the signals of your custom AXI4 IP and their change over time. In the _Tcl Console_ is a log of the testbench which tells you about all burst write/read transactions and all the slave write/read transactions. In the end the testbench prints the content of the memory.
+5. Go into the _Tcl Console_ and type `run 40000ns` and press [Enter] to start the simulation. In the _Wave Window_ you will see all the signals of your custom AXI4 IP and their change over time. In the _Tcl Console_ is a log of the testbench which tells you about all burst write/read transactions and all the slave write/read transactions. In the end the testbench prints the content of the memory.
